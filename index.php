@@ -63,7 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csvData'])) {
             <select id="separator" class="format-option">
                 <option value=",">Comma</option>
                 <option value=";">Semicolon</option>
-                <option value="\t">Tab</option>
+                <option value="tab">Tab</option>
+                <option value="&">LaTeX Array</option>
             </select>
         </label>
 
@@ -143,7 +144,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csvData'])) {
         function renderOutput(students) {
             counter.textContent = `(${students.length} found)`;
             const fields = [...document.querySelectorAll('.field:checked')].map(el => el.value);
-            const sep = document.getElementById('separator').value.replace('\\t', '\t');
+            let sep = '';
+            switch (document.getElementById('separator').value) {
+                case ',' : sep = ','; break;
+                case ';' : sep = '; '; break;
+                case 'tab' : sep = '\t'; break;
+                case '&' : sep = ' & '; break;
+                default : sep = ',';
+            }
 
             const lines = students.map(student => {
                 const parts = [];
@@ -154,11 +162,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csvData'])) {
                 return parts.join(sep);
             });
 
-            if (sep === ';') {
-                output.value = lines.join(';');
-            } else {
-                output.value = lines.join('\n');
+            switch (document.getElementById('separator').value) {
+                case ',' : output.value = lines.join('\n'); break;
+                case ';' : output.value = lines.join('; '); break;
+                case 'tab' : output.value = lines.join('\n'); break;
+                case '&' : output.value = lines.join(' \\\\\n') + ' \\\\'; break;
+                default : output.value = lines.join('\n');
             }
+
         }
 
         function copyToClipboard() {
