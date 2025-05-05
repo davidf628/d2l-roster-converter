@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csvData'])) {
         <h3>Export Options</h3>
         <label><input type="checkbox" value="name" checked class="field format-option"> Include Name</label>
         <label><input type="checkbox" value="id" checked class="field format-option"> Include Student ID</label>
+        <label><input type="checkbox" value="username" checked class="field format-option"> Include Username</label>
         <label><input type="checkbox" value="email" checked class="field format-option"> Include Email</label>
 
         <label>Name Format:
@@ -101,15 +102,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csvData'])) {
                     const fullName = parts[0].replace('View Profile for', '').trim();
                     const rawName = parts[1] || '';
                     let [last, first] = rawName.split(',').map(s => s.trim());
+
+                    // if the student is online, remove this information
                     first = first.replace('is online', '');
                     first = first.replace(fullName, '').trim();
+                    // remove any pronoun indicators
+                    first = first.replace(/\(\w+\/\w+\)/,'');
 
                     const id = parts.find(part => /^\d{7,9}$/.test(part));
                     const email = parts.find(part => /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(part));
                     const isStudent = parts.some(part => /student/i.test(part));
+                    const username = email.replace(/@.+/, '');
 
                     if (isStudent && first && last && id && email) {
-                        students.push({ first, last, id, email });
+                        students.push({ first, last, id, email, username });
                     }
                 }
 
@@ -143,6 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csvData'])) {
                 const parts = [];
                 if (fields.includes('name')) parts.push(formatName(student));
                 if (fields.includes('id')) parts.push(student.id);
+                if (fields.includes('username')) parts.push(student.username);
                 if (fields.includes('email')) parts.push(student.email);
                 return parts.join(sep);
             });
